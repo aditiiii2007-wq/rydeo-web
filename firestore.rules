@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // -- Users Collection --
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid == request.auth.uid 
+          && data.email is string
+          && data.walletBalance is number
+          && data.rideCount is number;
+      }
+      
+      allow get: if isSignedIn();
+      allow list: if false; // Users shouldn't list all users
+      
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'phone', 'photoURL', 'collegeName', 'isStudentVerified', 'studentBadge', 'walletBalance', 'rideCount', 'ratings']);
+    }
+
+    // -- Rides Collection --
+    match /rides/{rideId} {
+      function isValidRide(data) {
+        return data.passengerId == request.auth.uid 
+          && data.status in ['pending', 'searching', 'accepted', 'ongoing', 'completed', 'cancelled']
+          && data.fare is number;
+      }
+
+      allow get: if isSignedIn() && (resource.data.passengerId == request.auth.uid || resource.data.driverId == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.passengerId == request.auth.uid || resource.data.driverId == request.auth.uid);
+      
+      allow create: if isSignedIn() && isValidRide(incoming());
+      allow update: if isSignedIn() && (
+        // Passenger can cancel
+        (resource.data.passengerId == request.auth.uid && incoming().status == 'cancelled' && incoming().diff(existing()).affectedKeys().hasOnly(['status'])) ||
+        // Admin or system-like updates (simplified for this demo)
+        (resource.data.passengerId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'driverId']))
+      );
+    }
+
+    // -- Verifications --
+    match /verifications/{id} {
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

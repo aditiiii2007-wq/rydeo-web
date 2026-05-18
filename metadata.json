@@ -1,0 +1,10 @@
+{
+  "name": "RYDEO",
+  "description": "A premium smart ride-sharing platform for Pune commuters, students, and women. Features live tracking, shared rides, and safety tools.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}

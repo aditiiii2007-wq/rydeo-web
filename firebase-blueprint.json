@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Information about the user including status and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin", "driver"] },
+        "collegeName": { "type": "string" },
+        "isStudentVerified": { "type": "boolean" },
+        "studentBadge": { "type": "string" },
+        "walletBalance": { "type": "number" },
+        "rideCount": { "type": "number" },
+        "ratings": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Ride": {
+      "title": "Ride",
+      "description": "Details of a booked or offered ride.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "passengerId": { "type": "string" },
+        "driverId": { "type": "string" },
+        "pickup": { "type": "object" },
+        "destination": { "type": "object" },
+        "status": { "type": "string", "enum": ["pending", "searching", "accepted", "ongoing", "completed", "cancelled"] },
+        "type": { "type": "string", "enum": ["bike", "auto", "shared-auto", "mini", "sedan", "suv", "ev"] },
+        "fare": { "type": "number" },
+        "isWomenOnly": { "type": "boolean" },
+        "isShared": { "type": "boolean" },
+        "passengerIds": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Verification": {
+      "title": "Student Verification",
+      "description": "Metadata for student ID verification requests.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "documentUrl": { "type": "string" },
+        "college": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles."
+    },
+    "rides/{rideId}": {
+      "schema": "Ride",
+      "description": "Collection of ride requests and active rides."
+    },
+    "verifications/{verificationId}": {
+      "schema": "Verification",
+      "description": "Collection of student verification requests."
+    }
+  }
+}
